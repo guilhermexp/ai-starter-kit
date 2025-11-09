@@ -20,6 +20,7 @@ import { LayoutSettings } from "./appearance/layout-settings"
 import { ThemeSelection } from "./appearance/theme-selection"
 import { ConnectionsPlaceholder } from "./connections/connections-placeholder"
 import { DeveloperTools } from "./connections/developer-tools"
+import { MCPSection } from "./connections/mcp-section"
 import { OllamaSection } from "./connections/ollama-section"
 import { AccountManagement } from "./general/account-management"
 import { UserProfile } from "./general/user-profile"
@@ -134,6 +135,7 @@ export function SettingsContent({
               {!isDev && <ConnectionsPlaceholder />}
               {isDev && <OllamaSection />}
               {isDev && <DeveloperTools />}
+              <MCPSection />
             </TabsContent>
           </div>
         ) : (
@@ -221,6 +223,7 @@ export function SettingsContent({
                 {!isDev && <ConnectionsPlaceholder />}
                 {isDev && <OllamaSection />}
                 {isDev && <DeveloperTools />}
+                <MCPSection />
               </TabsContent>
             </div>
           </>

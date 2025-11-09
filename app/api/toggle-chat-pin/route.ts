@@ -1,37 +1,15 @@
-import { createClient } from "@/lib/supabase/server"
+import { toggleChatPin } from "@/lib/local-storage"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { chatId, pinned } = await request.json()
+    const { chatId } = await request.json()
 
-    if (!chatId || typeof pinned !== "boolean") {
-      return NextResponse.json(
-        { error: "Missing chatId or pinned" },
-        { status: 400 }
-      )
+    if (!chatId) {
+      return NextResponse.json({ error: "Missing chatId" }, { status: 400 })
     }
 
-    if (!supabase) {
-      return NextResponse.json({ success: true }, { status: 200 })
-    }
-
-    const toggle = pinned
-      ? { pinned: true, pinned_at: new Date().toISOString() }
-      : { pinned: false, pinned_at: null }
-
-    const { error } = await supabase
-      .from("chats")
-      .update(toggle)
-      .eq("id", chatId)
-
-    if (error) {
-      return NextResponse.json(
-        { error: "Failed to update pinned" },
-        { status: 500 }
-      )
-    }
+    await toggleChatPin(chatId)
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error) {

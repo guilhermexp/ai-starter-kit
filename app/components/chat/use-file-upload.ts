@@ -26,7 +26,7 @@ export const useFileUpload = () => {
     }
 
     try {
-      const processed = await processFiles(files, chatId, uid)
+      const processed = await processFiles(files, uid)
       setFiles([])
       return processed
     } catch {

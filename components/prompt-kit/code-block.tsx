@@ -3,7 +3,34 @@
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
 import React, { useEffect, useState } from "react"
-import { codeToHtml } from "shiki"
+import { createHighlighter } from "shiki"
+
+let highlighterInstance: Awaited<ReturnType<typeof createHighlighter>> | null =
+  null
+
+async function getHighlighter() {
+  if (!highlighterInstance) {
+    highlighterInstance = await createHighlighter({
+      themes: ["github-dark", "github-light"],
+      langs: [
+        "javascript",
+        "typescript",
+        "tsx",
+        "jsx",
+        "json",
+        "python",
+        "bash",
+        "shell",
+        "css",
+        "html",
+        "markdown",
+        "yaml",
+        "sql",
+      ],
+    })
+  }
+  return highlighterInstance
+}
 
 export type CodeBlockProps = {
   children?: React.ReactNode
@@ -44,11 +71,22 @@ function CodeBlockCode({
 
   useEffect(() => {
     async function highlight() {
-      const html = await codeToHtml(code, {
-        lang: language,
-        theme: appTheme === "dark" ? "github-dark" : "github-light",
-      })
-      setHighlightedHtml(html)
+      if (!code || code.trim() === "") {
+        setHighlightedHtml(null)
+        return
+      }
+
+      try {
+        const highlighter = await getHighlighter()
+        const html = highlighter.codeToHtml(code, {
+          lang: language,
+          theme: appTheme === "dark" ? "github-dark" : "github-light",
+        })
+        setHighlightedHtml(html)
+      } catch (error) {
+        console.error("Error highlighting code:", error)
+        setHighlightedHtml(null)
+      }
     }
     highlight()
   }, [code, language, appTheme])

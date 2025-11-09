@@ -1,11 +1,12 @@
 import type { ContentPart, Message } from "@/app/types/api.types"
-import type { Database, Json } from "@/app/types/database.types"
-import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Json } from "@/app/types/database.types"
 
 const DEFAULT_STEP = 0
 
+/**
+ * Save final assistant message (disabled - app uses local storage only)
+ */
 export async function saveFinalAssistantMessage(
-  supabase: SupabaseClient<Database>,
   chatId: string,
   messages: Message[],
   message_group_id?: string,
@@ -72,21 +73,7 @@ export async function saveFinalAssistantMessage(
   // Merge tool parts at the end
   parts.push(...toolMap.values())
 
-  const finalPlainText = textParts.join("\n\n")
-
-  const { error } = await supabase.from("messages").insert({
-    chat_id: chatId,
-    role: "assistant",
-    content: finalPlainText || "",
-    parts: parts as unknown as Json,
-    message_group_id,
-    model,
-  })
-
-  if (error) {
-    console.error("Error saving final assistant message:", error)
-    throw new Error(`Failed to save assistant message: ${error.message}`)
-  } else {
-    console.log("Assistant message saved successfully (merged).")
-  }
+  // Local-only mode - messages are stored via IndexedDB in the chat store
+  // No database insertion needed
+  console.log("Assistant message processed (local-only mode).")
 }

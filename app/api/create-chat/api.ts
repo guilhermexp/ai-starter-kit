@@ -1,5 +1,4 @@
-import { validateUserIdentity } from "@/lib/server/api"
-import { checkUsageByModel } from "@/lib/usage"
+import { saveChat, type Chat } from "@/lib/local-storage"
 
 type CreateChatInput = {
   userId: string
@@ -16,45 +15,22 @@ export async function createChatInDb({
   isAuthenticated,
   projectId,
 }: CreateChatInput) {
-  const supabase = await validateUserIdentity(userId, isAuthenticated)
-  if (!supabase) {
-    return {
-      id: crypto.randomUUID(),
-      user_id: userId,
-      title,
-      model,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-  }
-
-  await checkUsageByModel(supabase, userId, model, isAuthenticated)
-
-  const insertData: {
-    user_id: string
-    title: string
-    model: string
-    project_id?: string
-  } = {
-    user_id: userId,
+  const chat: Chat = {
+    id: crypto.randomUUID(),
     title: title || "New Chat",
     model,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }
 
-  if (projectId) {
-    insertData.project_id = projectId
+  await saveChat(chat)
+
+  return {
+    id: chat.id,
+    user_id: userId,
+    title: chat.title,
+    model: chat.model,
+    created_at: chat.createdAt,
+    updated_at: chat.updatedAt,
   }
-
-  const { data, error } = await supabase
-    .from("chats")
-    .insert(insertData)
-    .select("*")
-    .single()
-
-  if (error || !data) {
-    console.error("Error creating chat:", error)
-    return null
-  }
-
-  return data
 }

@@ -8,15 +8,15 @@
 
 ## Features
 
-- Multi-model support: OpenAI, Mistral, Claude, Gemini, Ollama (local models)
+- Multi-model support: OpenAI, Gemini, Grok (xAI), OpenRouter
 - Bring your own API key (BYOK) support via OpenRouter
+- **Built-in Tools**: Web search and image search powered by Exa
+- **Full MCP Support**: Extend with custom tools via Model Context Protocol
 - File uploads
 - Clean, responsive UI with light/dark themes
 - Built with Tailwind CSS, shadcn/ui, and prompt-kit
 - Open-source and self-hostable
 - Customizable: user system prompt, multiple layout options
-- Local AI with Ollama: Run models locally with automatic model detection
-- Full MCP support (wip)
 
 ## Quick Start
 
@@ -57,6 +57,45 @@ docker-compose -f docker-compose.ollama.yml up
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ibelick/zola)
 
 To unlock features like auth, file uploads, see [INSTALL.md](./INSTALL.md).
+
+## Tools & MCP
+
+Zola includes powerful built-in tools and supports the Model Context Protocol (MCP) for extending capabilities:
+
+### Built-in Tools
+
+- **Web Search** - Real-time web search powered by [Exa](https://exa.ai)
+- **Image Search** - Find relevant images from the web
+
+To enable built-in tools, add your Exa API key to `.env.local`:
+
+```bash
+EXA_API_KEY=your_exa_api_key
+```
+
+### MCP Integration
+
+Extend Zola with custom tools using MCP servers. Popular use cases:
+
+- **Filesystem** - Read/write files
+- **GitHub** - Search repos, create issues, read code
+- **Databases** - Query PostgreSQL, MySQL, etc.
+- **Browser Automation** - Control browsers with Puppeteer
+- **Custom APIs** - Integrate any service via MCP
+
+See [docs/MCP.md](./docs/MCP.md) for complete setup instructions.
+
+**Example**: Enable GitHub integration
+
+```bash
+# Get token from https://github.com/settings/tokens
+GITHUB_TOKEN=ghp_your_token
+
+# Configure MCP server
+MCP_SERVERS='[{"name":"github","type":"stdio","enabled":true,"command":"npx","args":["-y","@modelcontextprotocol/server-github"],"env":{"GITHUB_PERSONAL_ACCESS_TOKEN":"ghp_your_token"}}]'
+```
+
+Now ask: "Search for Next.js repositories with more than 10k stars"
 
 ## Built with
 

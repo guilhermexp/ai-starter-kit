@@ -52,3 +52,6 @@ bun.lockb
 bun.lock
 
 /.cursor
+
+# MCP user configuration
+/lib/mcp/user-servers.json

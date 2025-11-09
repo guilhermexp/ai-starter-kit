@@ -1,12 +1,15 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 export function useChatDraft(chatId: string | null) {
   const storageKey = chatId ? `chat-draft-${chatId}` : "chat-draft-new"
 
-  const [draftValue, setDraftValueState] = useState<string>(() => {
-    if (typeof window === "undefined") return ""
-    return localStorage.getItem(storageKey) || ""
-  })
+  const [draftValue, setDraftValueState] = useState<string>("")
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const storedValue = localStorage.getItem(storageKey) || ""
+    setDraftValueState(storedValue)
+  }, [storageKey])
 
   const setDraftValue = useCallback(
     (value: string) => {

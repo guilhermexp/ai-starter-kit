@@ -23,122 +23,143 @@ const storesReadyPromise = new Promise<void>((resolve) => {
 })
 
 function initDatabase() {
-  if (!isClient) return Promise.resolve()
+  if (!isClient || typeof indexedDB === "undefined") return Promise.resolve()
 
   return new Promise<void>((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION)
+    try {
+      const request = indexedDB.open(DB_NAME, DB_VERSION)
 
-    request.onupgradeneeded = () => {
-      const db = request.result
-      if (!db.objectStoreNames.contains("chats")) db.createObjectStore("chats")
-      if (!db.objectStoreNames.contains("messages"))
-        db.createObjectStore("messages")
-      if (!db.objectStoreNames.contains("sync")) db.createObjectStore("sync")
-    }
+      request.onupgradeneeded = () => {
+        const db = request.result
+        if (!db.objectStoreNames.contains("chats")) db.createObjectStore("chats")
+        if (!db.objectStoreNames.contains("messages"))
+          db.createObjectStore("messages")
+        if (!db.objectStoreNames.contains("sync")) db.createObjectStore("sync")
+      }
 
-    request.onsuccess = () => {
-      request.result.close()
+      request.onsuccess = () => {
+        request.result.close()
+        resolve()
+      }
+
+      request.onerror = () => {
+        reject(request.error)
+      }
+    } catch (error) {
+      console.warn("IndexedDB not available in initDatabase:", error)
       resolve()
-    }
-
-    request.onerror = () => {
-      reject(request.error)
     }
   })
 }
 
-if (isClient) {
-  const checkRequest = indexedDB.open(DB_NAME)
+if (isClient && typeof indexedDB !== "undefined") {
+  try {
+    const checkRequest = indexedDB.open(DB_NAME)
 
-  checkRequest.onsuccess = () => {
-    const db = checkRequest.result
-    if (db.version > DB_VERSION) {
-      db.close()
-      const deleteRequest = indexedDB.deleteDatabase(DB_NAME)
-      deleteRequest.onsuccess = () => {
+    checkRequest.onsuccess = () => {
+      const db = checkRequest.result
+      if (db.version > DB_VERSION) {
+        db.close()
+        const deleteRequest = indexedDB.deleteDatabase(DB_NAME)
+        deleteRequest.onsuccess = () => {
+          initDatabaseAndStores()
+        }
+        deleteRequest.onerror = (event) => {
+          console.error("Database deletion failed:", event)
+          initDatabaseAndStores()
+        }
+      } else {
+        db.close()
         initDatabaseAndStores()
       }
-      deleteRequest.onerror = (event) => {
-        console.error("Database deletion failed:", event)
-        initDatabaseAndStores()
-      }
-    } else {
-      db.close()
+    }
+
+    checkRequest.onerror = () => {
       initDatabaseAndStores()
     }
-  }
-
-  checkRequest.onerror = () => {
-    initDatabaseAndStores()
+  } catch (error) {
+    console.warn("IndexedDB not available:", error)
   }
 }
 
 function initDatabaseAndStores(): void {
+  if (!isClient || typeof indexedDB === "undefined") {
+    storesReady = true
+    storesReadyResolve()
+    return
+  }
+
   dbInitPromise = initDatabase()
 
   dbInitPromise
     .then(() => {
-      const openRequest = indexedDB.open(DB_NAME)
+      try {
+        const openRequest = indexedDB.open(DB_NAME)
 
-      openRequest.onsuccess = () => {
-        const objectStores = Array.from(openRequest.result.objectStoreNames)
+        openRequest.onsuccess = () => {
+          const objectStores = Array.from(openRequest.result.objectStoreNames)
 
-        if (objectStores.length === 0) {
-          openRequest.result.close()
+          if (objectStores.length === 0) {
+            openRequest.result.close()
 
-          // Delete and recreate the database to force onupgradeneeded
-          const deleteRequest = indexedDB.deleteDatabase(DB_NAME)
-          deleteRequest.onsuccess = () => {
-            dbInitPromise = initDatabase() // Reinitialize with proper stores
-            dbInitPromise.then(() => {
-              // Try opening again to create stores
-              const reopenRequest = indexedDB.open(DB_NAME)
-              reopenRequest.onsuccess = () => {
-                const newObjectStores = Array.from(
-                  reopenRequest.result.objectStoreNames
-                )
+            // Delete and recreate the database to force onupgradeneeded
+            const deleteRequest = indexedDB.deleteDatabase(DB_NAME)
+            deleteRequest.onsuccess = () => {
+              dbInitPromise = initDatabase() // Reinitialize with proper stores
+              dbInitPromise.then(() => {
+                // Try opening again to create stores
+                const reopenRequest = indexedDB.open(DB_NAME)
+                reopenRequest.onsuccess = () => {
+                  const newObjectStores = Array.from(
+                    reopenRequest.result.objectStoreNames
+                  )
 
-                if (newObjectStores.includes("chats"))
-                  stores.chats = createStore(DB_NAME, "chats")
-                if (newObjectStores.includes("messages"))
-                  stores.messages = createStore(DB_NAME, "messages")
-                if (newObjectStores.includes("sync"))
-                  stores.sync = createStore(DB_NAME, "sync")
+                  if (newObjectStores.includes("chats"))
+                    stores.chats = createStore(DB_NAME, "chats")
+                  if (newObjectStores.includes("messages"))
+                    stores.messages = createStore(DB_NAME, "messages")
+                  if (newObjectStores.includes("sync"))
+                    stores.sync = createStore(DB_NAME, "sync")
 
-                storesReady = true
-                storesReadyResolve()
-                reopenRequest.result.close()
-              }
+                  storesReady = true
+                  storesReadyResolve()
+                  reopenRequest.result.close()
+                }
 
-              reopenRequest.onerror = (event) => {
-                console.error(
-                  "Failed to reopen database after recreation:",
-                  event
-                )
-                storesReady = true
-                storesReadyResolve()
-              }
-            })
+                reopenRequest.onerror = (event) => {
+                  console.error(
+                    "Failed to reopen database after recreation:",
+                    event
+                  )
+                  storesReady = true
+                  storesReadyResolve()
+                }
+              })
+            }
+
+            return // Skip the rest of this function
           }
 
-          return // Skip the rest of this function
+          // Continue with existing logic for when stores are found
+          if (objectStores.includes("chats"))
+            stores.chats = createStore(DB_NAME, "chats")
+          if (objectStores.includes("messages"))
+            stores.messages = createStore(DB_NAME, "messages")
+          if (objectStores.includes("sync"))
+            stores.sync = createStore(DB_NAME, "sync")
+
+          storesReady = true
+          storesReadyResolve()
+          openRequest.result.close()
         }
 
-        // Continue with existing logic for when stores are found
-        if (objectStores.includes("chats"))
-          stores.chats = createStore(DB_NAME, "chats")
-        if (objectStores.includes("messages"))
-          stores.messages = createStore(DB_NAME, "messages")
-        if (objectStores.includes("sync"))
-          stores.sync = createStore(DB_NAME, "sync")
-
-        storesReady = true
-        storesReadyResolve()
-        openRequest.result.close()
-      }
-
-      openRequest.onerror = (event) => {
-        console.error("Failed to open database for store creation:", event)
+        openRequest.onerror = (event) => {
+          console.error("Failed to open database for store creation:", event)
+          storesReady = true
+          storesReadyResolve()
+        }
+      } catch (error) {
+        console.warn("IndexedDB not available in initDatabaseAndStores:", error)
         storesReady = true
         storesReadyResolve()
       }
@@ -151,8 +172,7 @@ function initDatabaseAndStores(): void {
 }
 
 export async function ensureDbReady() {
-  if (!isClient) {
-    console.warn("ensureDbReady: not client")
+  if (!isClient || typeof indexedDB === "undefined") {
     return
   }
   if (dbInitPromise) await dbInitPromise
@@ -165,17 +185,19 @@ export async function readFromIndexedDB<T>(
 ): Promise<T | T[]> {
   await ensureDbReady()
 
-  if (!isClient) {
-    console.warn("readFromIndexedDB: not client")
+  if (!isClient || typeof indexedDB === "undefined") {
     return key ? (null as T) : []
   }
 
   if (!stores[table]) {
-    console.warn("readFromIndexedDB: store not initialized")
     return key ? (null as T) : []
   }
 
   try {
+    if (typeof indexedDB === "undefined") {
+      return key ? (null as T) : []
+    }
+
     const store = stores[table]
     if (key) {
       const result = await get<T>(key, store)
@@ -201,17 +223,19 @@ export async function writeToIndexedDB<T extends { id: string | number }>(
 ): Promise<void> {
   await ensureDbReady()
 
-  if (!isClient) {
-    console.warn("writeToIndexedDB: not client")
+  if (!isClient || typeof indexedDB === "undefined") {
     return
   }
 
   if (!stores[table]) {
-    console.warn("writeToIndexedDB: store not initialized")
     return
   }
 
   try {
+    if (typeof indexedDB === "undefined") {
+      return
+    }
+
     const store = stores[table]
     const entries: [IDBValidKey, T][] = Array.isArray(data)
       ? data.map((item) => [item.id, item])
@@ -229,18 +253,20 @@ export async function deleteFromIndexedDB(
 ): Promise<void> {
   await ensureDbReady()
 
-  if (!isClient) {
-    console.warn("deleteFromIndexedDB: not client")
+  if (!isClient || typeof indexedDB === "undefined") {
     return
   }
 
   const store = stores[table]
   if (!store) {
-    console.warn(`Store '${table}' not initialized.`)
     return
   }
 
   try {
+    if (typeof indexedDB === "undefined") {
+      return
+    }
+
     if (key) {
       await del(key, store)
     } else {
@@ -253,8 +279,7 @@ export async function deleteFromIndexedDB(
 }
 
 export async function clearAllIndexedDBStores() {
-  if (!isClient) {
-    console.warn("clearAllIndexedDBStores: not client")
+  if (!isClient || typeof indexedDB === "undefined") {
     return
   }
 

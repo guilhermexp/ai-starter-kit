@@ -1,11 +1,11 @@
 import { SYSTEM_PROMPT_DEFAULT } from "@/lib/config"
 import { getAllModels } from "@/lib/models"
 import { getProviderForModel } from "@/lib/openproviders/provider-map"
+import { getAllTools } from "@/lib/tools"
 import type { ProviderWithoutOllama } from "@/lib/user-keys"
 import { Attachment } from "@ai-sdk/ui-utils"
-import { Message as MessageAISDK, streamText, ToolSet } from "ai"
+import { Message as MessageAISDK, streamText } from "ai"
 import {
-  incrementMessageCount,
   logUserMessage,
   storeAssistantMessage,
   validateAndTrackUsage,
@@ -45,22 +45,17 @@ export async function POST(req: Request) {
       )
     }
 
-    const supabase = await validateAndTrackUsage({
+    // Validate usage (local-only mode - no database tracking)
+    await validateAndTrackUsage({
       userId,
       model,
       isAuthenticated,
     })
 
-    // Increment message count for successful validation
-    if (supabase) {
-      await incrementMessageCount({ supabase, userId })
-    }
-
     const userMessage = messages[messages.length - 1]
 
-    if (supabase && userMessage?.role === "user") {
+    if (userMessage?.role === "user") {
       await logUserMessage({
-        supabase,
         userId,
         chatId,
         content: userMessage.content,
@@ -83,17 +78,18 @@ export async function POST(req: Request) {
     let apiKey: string | undefined
     if (isAuthenticated && userId) {
       const { getEffectiveApiKey } = await import("@/lib/user-keys")
-      const provider = getProviderForModel(model)
-      apiKey =
-        (await getEffectiveApiKey(userId, provider as ProviderWithoutOllama)) ||
-        undefined
+      const provider = getProviderForModel(model as any)
+      apiKey = (await getEffectiveApiKey(userId, provider)) || undefined
     }
+
+    // Load all tools (native + MCP)
+    const allTools = await getAllTools()
 
     const result = streamText({
       model: modelConfig.apiSdk(apiKey, { enableSearch }),
       system: effectiveSystemPrompt,
       messages: messages,
-      tools: {} as ToolSet,
+      tools: allTools,
       maxSteps: 10,
       onError: (err: unknown) => {
         console.error("Streaming error occurred:", err)
@@ -101,16 +97,13 @@ export async function POST(req: Request) {
       },
 
       onFinish: async ({ response }) => {
-        if (supabase) {
-          await storeAssistantMessage({
-            supabase,
-            chatId,
-            messages:
-              response.messages as unknown as import("@/app/types/api.types").Message[],
-            message_group_id,
-            model,
-          })
-        }
+        await storeAssistantMessage({
+          chatId,
+          messages:
+            response.messages as unknown as import("@/app/types/api.types").Message[],
+          message_group_id,
+          model,
+        })
       },
     })
 

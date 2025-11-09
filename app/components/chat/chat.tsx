@@ -47,7 +47,7 @@ export function Chat() {
   const { messages: initialMessages, cacheAndAddMessage } = useMessages()
   const { user } = useUser()
   const { preferences } = useUserPreferences()
-  const { draftValue, clearDraft } = useChatDraft(chatId)
+  const { draftValue, setDraftValue, clearDraft } = useChatDraft(chatId)
 
   // File upload functionality
   const {
@@ -130,6 +130,7 @@ export function Chat() {
     ensureChatExists,
     handleFileUploads,
     selectedModel,
+    setDraftValue,
     clearDraft,
     bumpChat,
   })
@@ -221,7 +222,7 @@ export function Chat() {
         "@container/main relative flex h-full flex-col items-center justify-end md:justify-center"
       )}
     >
-      <DialogAuth open={hasDialogAuth} setOpen={setHasDialogAuth} />
+      {/* Auth dialog disabled - local only mode */}
 
       <AnimatePresence initial={false} mode="popLayout">
         {showOnboarding ? (

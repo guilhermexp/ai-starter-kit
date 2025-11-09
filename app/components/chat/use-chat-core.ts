@@ -1,4 +1,3 @@
-import { useChatDraft } from "@/app/hooks/use-chat-draft"
 import { toast } from "@/components/ui/toast"
 import { getOrCreateGuestUserId } from "@/lib/api"
 import { MESSAGE_MAX_LENGTH, SYSTEM_PROMPT_DEFAULT } from "@/lib/config"
@@ -29,6 +28,7 @@ type UseChatCoreProps = {
     chatId: string
   ) => Promise<Attachment[] | null>
   selectedModel: string
+  setDraftValue: (value: string) => void
   clearDraft: () => void
   bumpChat: (chatId: string) => void
 }
@@ -47,6 +47,7 @@ export function useChatCore({
   ensureChatExists,
   handleFileUploads,
   selectedModel,
+  setDraftValue,
   clearDraft,
   bumpChat,
 }: UseChatCoreProps) {
@@ -104,6 +105,12 @@ export function useChatCore({
     onError: handleError,
   })
 
+  useEffect(() => {
+    if (draftValue !== input) {
+      setInput(draftValue)
+    }
+  }, [draftValue, input, setInput])
+
   // Handle search params on mount
   useEffect(() => {
     if (prompt && typeof window !== "undefined") {
@@ -112,14 +119,16 @@ export function useChatCore({
   }, [prompt, setInput])
 
   // Reset messages when navigating from a chat to home
-  if (
-    prevChatIdRef.current !== null &&
-    chatId === null &&
-    messages.length > 0
-  ) {
-    setMessages([])
-  }
-  prevChatIdRef.current = chatId
+  useEffect(() => {
+    if (
+      prevChatIdRef.current !== null &&
+      chatId === null &&
+      messages.length > 0
+    ) {
+      setMessages([])
+    }
+    prevChatIdRef.current = chatId
+  }, [chatId, messages.length, setMessages])
 
   // Submit action
   const submit = useCallback(async () => {
@@ -331,8 +340,7 @@ export function useChatCore({
     reload(options)
   }, [user, chatId, selectedModel, isAuthenticated, systemPrompt, reload])
 
-  // Handle input change - now with access to the real setInput function!
-  const { setDraftValue } = useChatDraft(chatId)
+  // Handle input change and keep the persisted draft in sync
   const handleInputChange = useCallback(
     (value: string) => {
       setInput(value)

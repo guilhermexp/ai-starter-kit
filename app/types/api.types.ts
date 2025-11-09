@@ -1,8 +1,7 @@
 import type { Database, Json } from "@/app/types/database.types"
 import type { Attachment } from "@ai-sdk/ui-utils"
-import type { SupabaseClient } from "@supabase/supabase-js"
 
-export type SupabaseClientType = SupabaseClient<Database>
+// Removed - app now uses local storage only
 
 export interface ContentPart {
   type: string
@@ -36,7 +35,6 @@ export interface ChatApiParams {
 }
 
 export interface LogUserMessageParams {
-  supabase: SupabaseClientType
   userId: string
   chatId: string
   content: string
@@ -47,7 +45,6 @@ export interface LogUserMessageParams {
 }
 
 export interface StoreAssistantMessageParams {
-  supabase: SupabaseClientType
   chatId: string
   messages: Message[]
   message_group_id?: string

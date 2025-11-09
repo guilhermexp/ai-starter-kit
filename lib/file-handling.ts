@@ -1,9 +1,6 @@
 import { toast } from "@/components/ui/toast"
-import { SupabaseClient } from "@supabase/supabase-js"
 import * as fileType from "file-type"
 import { DAILY_FILE_UPLOAD_LIMIT } from "./config"
-import { createClient } from "./supabase/client"
-import { isSupabaseEnabled } from "./supabase/config"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
@@ -28,145 +25,89 @@ export type Attachment = {
 
 export async function validateFile(
   file: File
-): Promise<{ isValid: boolean; error?: string }> {
+): Promise<{ valid: boolean; error?: string }> {
+  // Check file size
   if (file.size > MAX_FILE_SIZE) {
     return {
-      isValid: false,
-      error: `File size exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB limit`,
+      valid: false,
+      error: `File size must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB`,
     }
   }
 
-  const buffer = await file.arrayBuffer()
-  const type = await fileType.fileTypeFromBuffer(
-    Buffer.from(buffer.slice(0, 4100))
-  )
-
-  if (!type || !ALLOWED_FILE_TYPES.includes(type.mime)) {
+  // Check file type
+  if (!ALLOWED_FILE_TYPES.includes(file.type)) {
     return {
-      isValid: false,
-      error: "File type not supported or doesn't match its extension",
+      valid: false,
+      error: "File type not allowed",
     }
   }
 
-  return { isValid: true }
+  return { valid: true }
 }
 
-export async function uploadFile(
-  supabase: SupabaseClient,
-  file: File
-): Promise<string> {
-  const fileExt = file.name.split(".").pop()
-  const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-  const filePath = `uploads/${fileName}`
-
-  const { error } = await supabase.storage
-    .from("chat-attachments")
-    .upload(filePath, file)
-
-  if (error) {
-    throw new Error(`Error uploading file: ${error.message}`)
-  }
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("chat-attachments").getPublicUrl(filePath)
-
-  return publicUrl
-}
-
-export function createAttachment(file: File, url: string): Attachment {
-  return {
-    name: file.name,
-    contentType: file.type,
-    url,
-  }
-}
-
-export async function processFiles(
+/**
+ * Handle file attachments (local-only mode - uses base64 data URLs)
+ */
+export async function handleFileAttachments(
   files: File[],
-  chatId: string,
   userId: string
 ): Promise<Attachment[]> {
-  const supabase = isSupabaseEnabled ? createClient() : null
   const attachments: Attachment[] = []
 
   for (const file of files) {
-    const validation = await validateFile(file)
-    if (!validation.isValid) {
-      console.warn(`File ${file.name} validation failed:`, validation.error)
-      toast({
-        title: "File validation failed",
-        description: validation.error,
-        status: "error",
-      })
-      continue
-    }
-
     try {
-      const url = supabase
-        ? await uploadFile(supabase, file)
-        : URL.createObjectURL(file)
-
-      if (supabase) {
-        const { error } = await supabase.from("chat_attachments").insert({
-          chat_id: chatId,
-          user_id: userId,
-          file_url: url,
-          file_name: file.name,
-          file_type: file.type,
-          file_size: file.size,
+      const validation = await validateFile(file)
+      if (!validation.valid) {
+        toast({
+          title: `File validation failed: ${file.name}`,
+          description: validation.error,
+          status: "error",
         })
-
-        if (error) {
-          throw new Error(`Database insertion failed: ${error.message}`)
-        }
+        continue
       }
 
-      attachments.push(createAttachment(file, url))
-    } catch (error) {
-      console.error(`Error processing file ${file.name}:`, error)
+      // Convert file to base64 data URL for local storage
+      const reader = new FileReader()
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+
+      attachments.push({
+        name: file.name,
+        contentType: file.type,
+        url: dataUrl, // Use data URL instead of remote storage
+      })
+    } catch (err) {
+      console.error(`Failed to process file ${file.name}:`, err)
+      toast({
+        title: `Failed to upload ${file.name}`,
+        description: "An error occurred while processing the file",
+        status: "error",
+      })
     }
   }
 
   return attachments
 }
 
-export class FileUploadLimitError extends Error {
-  code: string
-  constructor(message: string) {
-    super(message)
-    this.code = "DAILY_FILE_LIMIT_REACHED"
-  }
+/**
+ * Check daily file upload count (disabled in local-only mode)
+ */
+export async function checkDailyFileUploadCount(
+  userId: string
+): Promise<number> {
+  // Local-only mode - no limits
+  return 0
 }
 
-export async function checkFileUploadLimit(userId: string) {
-  if (!isSupabaseEnabled) return 0
+/**
+ * Alias for backward compatibility
+ */
+export const checkFileUploadLimit = checkDailyFileUploadCount
 
-  const supabase = createClient()
-
-  if (!supabase) {
-    toast({
-      title: "File upload is not supported in this deployment",
-      status: "info",
-    })
-    return 0
-  }
-
-  const now = new Date()
-  const startOfToday = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-  )
-
-  const { count, error } = await supabase
-    .from("chat_attachments")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .gte("created_at", startOfToday.toISOString())
-
-  if (error) throw new Error(error.message)
-  if (count && count >= DAILY_FILE_UPLOAD_LIMIT) {
-    throw new FileUploadLimitError("Daily file upload limit reached.")
-  }
-
-  return count
-}
+/**
+ * Process files (local-only mode - uses base64 data URLs)
+ */
+export const processFiles = handleFileAttachments

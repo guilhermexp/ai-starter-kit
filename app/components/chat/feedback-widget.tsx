@@ -13,7 +13,7 @@ import { motion } from "motion/react"
 import { useState } from "react"
 
 const TRANSITION_POPOVER = {
-  type: "spring",
+  type: "spring" as const,
   bounce: 0.1,
   duration: 0.3,
 }
@@ -75,7 +75,9 @@ export function FeedbackWidget({ authUserId }: FeedbackWidgetProps) {
             transformOrigin: "bottom right",
           }}
         >
-          <FeedbackForm authUserId={authUserId} onClose={closeMenu} />
+          <div className="p-4 text-muted-foreground text-sm">
+            Feedback is not available in local-only mode
+          </div>
         </MorphingPopoverContent>
       </MorphingPopover>
     </div>
