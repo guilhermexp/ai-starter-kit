@@ -1,6 +1,6 @@
 # MCP (Model Context Protocol) Integration
 
-Zola supports the Model Context Protocol, allowing you to extend the chat capabilities with custom tools from MCP servers.
+This app supports the Model Context Protocol, allowing you to extend the chat capabilities with custom tools from MCP servers.
 
 ## What is MCP?
 
@@ -16,7 +16,7 @@ MCP (Model Context Protocol) is a standard protocol for connecting AI models to 
 ## How It Works
 
 1. **MCP Servers** provide tools that the AI can use
-2. **Zola** loads these tools and makes them available to the chat
+2. **The app** loads these tools and makes them available to the chat
 3. **The AI model** decides when to use these tools based on user queries
 4. **Results** are displayed in the chat with specialized UI components
 

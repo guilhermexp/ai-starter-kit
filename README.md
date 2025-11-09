@@ -1,10 +1,6 @@
-# Zola
+# AI Starter Kit
 
-[zola.chat](https://zola.chat)
-
-**Zola** is the open-source chat interface for all your models.
-
-![zola cover](./public/cover_zola.jpg)
+An open-source chat interface for all your models.
 
 ## Features
 
@@ -23,8 +19,7 @@
 ### Option 1: With OpenAI (Cloud)
 
 ```bash
-git clone https://github.com/ibelick/zola.git
-cd zola
+# Clone your repository
 npm install
 echo "OPENAI_API_KEY=your-key" > .env.local
 npm run dev
@@ -37,30 +32,24 @@ npm run dev
 curl -fsSL https://ollama.ai/install.sh | sh
 ollama pull llama3.2  # or any model you prefer
 
-# Clone and run Zola
-git clone https://github.com/ibelick/zola.git
-cd zola
+# Clone and run
 npm install
 npm run dev
 ```
 
-Zola will automatically detect your local Ollama models!
+The app will automatically detect your local Ollama models!
 
 ### Option 3: Docker with Ollama
 
 ```bash
-git clone https://github.com/ibelick/zola.git
-cd zola
 docker-compose -f docker-compose.ollama.yml up
 ```
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ibelick/zola)
 
 To unlock features like auth, file uploads, see [INSTALL.md](./INSTALL.md).
 
 ## Tools & MCP
 
-Zola includes powerful built-in tools and supports the Model Context Protocol (MCP) for extending capabilities:
+This starter kit includes powerful built-in tools and supports the Model Context Protocol (MCP) for extending capabilities:
 
 ### Built-in Tools
 
@@ -75,7 +64,7 @@ EXA_API_KEY=your_exa_api_key
 
 ### MCP Integration
 
-Extend Zola with custom tools using MCP servers. Popular use cases:
+Extend the app with custom tools using MCP servers. Popular use cases:
 
 - **Filesystem** - Read/write files
 - **GitHub** - Search repos, create issues, read code

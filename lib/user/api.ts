@@ -10,7 +10,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
   // Local-only mode - return guest profile
   return {
     id: "guest",
-    email: "guest@zola.chat",
+    email: "guest@localhost",
     display_name: "Guest",
     profile_image: "",
     anonymous: true,

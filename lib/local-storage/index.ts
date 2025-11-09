@@ -66,17 +66,17 @@ export function getOrCreateUserId(): string {
     return `server_guest_${Date.now()}`
   }
 
-  const existingId = localStorage.getItem("zola_user_id")
+  const existingId = localStorage.getItem("app_user_id")
   if (existingId) return existingId
 
   const newId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  localStorage.setItem("zola_user_id", newId)
+  localStorage.setItem("app_user_id", newId)
   return newId
 }
 
 export function getUserId(): string | null {
   if (!isClient) return null
-  return localStorage.getItem("zola_user_id")
+  return localStorage.getItem("app_user_id")
 }
 
 // User preferences
