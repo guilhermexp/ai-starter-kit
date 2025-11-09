@@ -11,7 +11,7 @@ import {
   Spinner,
   Wrench,
 } from "@phosphor-icons/react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion } from "motion/react"
 import { useMemo, useState } from "react"
 
 interface ToolInvocationProps {
