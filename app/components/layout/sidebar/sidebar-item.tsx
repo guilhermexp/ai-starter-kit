@@ -1,5 +1,5 @@
 import { useBreakpoint } from "@/app/hooks/use-breakpoint"
-import useClickOutside from "@/app/hooks/use-click-outside"
+import useClickOutside from "@/components/motion-primitives/useClickOutside"
 import { useChats } from "@/lib/chat-store/chats/provider"
 import { Chat } from "@/lib/chat-store/types"
 import { cn } from "@/lib/utils"
