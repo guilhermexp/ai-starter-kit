@@ -1,4 +1,4 @@
-import { getMCPServers, getMCPServersSource, getMCPTools } from "@/lib/mcp"
+import { getMCPServers, getMCPServersSource, getMCPToolsWithErrors } from "@/lib/mcp"
 import { NextResponse } from "next/server"
 
 /**
@@ -11,13 +11,16 @@ export async function GET() {
     const servers = getMCPServers()
     const source = getMCPServersSource()
 
-    // Get loaded tools
+    // Get loaded tools with error information
     let tools: Record<string, any> = {}
     let toolCount = 0
+    let serverErrors: Record<string, string> = {}
 
     try {
-      tools = await getMCPTools()
+      const result = await getMCPToolsWithErrors()
+      tools = result.tools
       toolCount = Object.keys(tools).length
+      serverErrors = result.errors
     } catch (error) {
       console.error("Error loading MCP tools:", error)
     }
@@ -39,6 +42,7 @@ export async function GET() {
       enabledServers: servers.filter((s) => s.enabled),
       totalTools: toolCount,
       toolsByServer,
+      serverErrors, // Include error information for failed servers
       nativeTools: ["webSearch", "imageSearch"],
       source,
       editable: source !== "env", // Can't edit if coming from env var

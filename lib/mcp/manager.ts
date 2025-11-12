@@ -9,14 +9,17 @@ type MCPClient = {
   close: () => void
 }
 
-/**
- * Load all enabled MCP servers and return their tools
- * Returns a merged ToolSet and cleanup function
- */
-export async function loadMCPTools(): Promise<{
+type LoadMCPToolsResult = {
   tools: ToolSet
   cleanup: () => void
-}> {
+  errors: Record<string, string> // server name -> error message
+}
+
+/**
+ * Load all enabled MCP servers and return their tools
+ * Returns a merged ToolSet, cleanup function, and any errors
+ */
+export async function loadMCPTools(): Promise<LoadMCPToolsResult> {
   const servers = getMCPServers()
   const enabledServers = servers.filter((s) => s.enabled)
 
@@ -24,11 +27,13 @@ export async function loadMCPTools(): Promise<{
     return {
       tools: {},
       cleanup: () => {},
+      errors: {},
     }
   }
 
   const clients: MCPClient[] = []
   const mergedTools: ToolSet = {}
+  const errors: Record<string, string> = {}
 
   // Load each server
   for (const server of enabledServers) {
@@ -38,11 +43,17 @@ export async function loadMCPTools(): Promise<{
       let client: { tools: ToolSet; close: () => void }
 
       if (server.type === "stdio") {
+        if (!server.command) {
+          throw new Error("Command is required for stdio servers")
+        }
         client = await loadMCPToolsFromLocal(
           server.command,
           server.env || {}
         )
       } else {
+        if (!server.url) {
+          throw new Error("URL is required for SSE servers")
+        }
         client = await loadMCPToolsFromURL(server.url)
       }
 
@@ -65,7 +76,9 @@ export async function loadMCPTools(): Promise<{
         `✓ Loaded MCP server: ${server.name} (${Object.keys(prefixedTools).length} tools)`
       )
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       console.error(`Failed to load MCP server ${server.name}:`, error)
+      errors[server.name] = errorMessage
     }
   }
 
@@ -83,6 +96,7 @@ export async function loadMCPTools(): Promise<{
   return {
     tools: mergedTools,
     cleanup,
+    errors,
   }
 }
 
@@ -90,10 +104,7 @@ export async function loadMCPTools(): Promise<{
  * Cache for MCP tools to avoid reloading on every request
  * Tools are loaded once and reused across requests
  */
-let mcpToolsCache: {
-  tools: ToolSet
-  cleanup: () => void
-} | null = null
+let mcpToolsCache: LoadMCPToolsResult | null = null
 
 /**
  * Get MCP tools (cached)
@@ -105,6 +116,22 @@ export async function getMCPTools(): Promise<ToolSet> {
     mcpToolsCache = await loadMCPTools()
   }
   return mcpToolsCache.tools
+}
+
+/**
+ * Get MCP tools with error information
+ */
+export async function getMCPToolsWithErrors(): Promise<{
+  tools: ToolSet
+  errors: Record<string, string>
+}> {
+  if (!mcpToolsCache) {
+    mcpToolsCache = await loadMCPTools()
+  }
+  return {
+    tools: mcpToolsCache.tools,
+    errors: mcpToolsCache.errors,
+  }
 }
 
 /**

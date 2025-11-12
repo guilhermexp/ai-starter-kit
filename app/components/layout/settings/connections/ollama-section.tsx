@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { toast } from "@/components/ui/toast"
+import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react"
 import { useState } from "react"
 
 export function OllamaSection() {
   const [ollamaEndpoint, setOllamaEndpoint] = useState("http://localhost:11434")
-  const [enableOllama, setEnableOllama] = useState(true) // Default enabled in dev
+  const [enableOllama, setEnableOllama] = useState(false) // Default disabled
   const [isLoading, setIsLoading] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false) // Default collapsed
 
   // In client-side, we assume development mode (Ollama enabled) unless it's a production build
   const isLocked =
@@ -61,7 +63,18 @@ export function OllamaSection() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Ollama</span>
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+            >
+              <span>Ollama</span>
+              {isExpanded ? (
+                <CaretUpIcon className="size-4" />
+              ) : (
+                <CaretDownIcon className="size-4" />
+              )}
+            </button>
             <Switch
               checked={enableOllama && !isLocked}
               onCheckedChange={setEnableOllama}
@@ -69,7 +82,8 @@ export function OllamaSection() {
             />
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        {isExpanded && (
+          <CardContent className="space-y-4">
           <div>
             <Label htmlFor="ollama-endpoint">Endpoint</Label>
             <Input
@@ -108,7 +122,8 @@ export function OllamaSection() {
               </p>
             </div>
           )}
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
     </div>
   )

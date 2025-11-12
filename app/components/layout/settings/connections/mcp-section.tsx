@@ -22,6 +22,7 @@ type MCPInfo = {
   enabledServers: MCPServer[]
   totalTools: number
   toolsByServer: Record<string, string[]>
+  serverErrors?: Record<string, string> // server name -> error message
   nativeTools: string[]
   source: "env" | "file" | "default"
   editable: boolean
@@ -140,6 +141,7 @@ export function MCPSection() {
   const servers = data?.servers ?? []
   const enabledServers = data?.enabledServers ?? []
   const toolsByServer = data?.toolsByServer ?? {}
+  const serverErrors = data?.serverErrors ?? {}
   const nativeTools = data?.nativeTools ?? []
   const editable = data?.editable ?? false
   const source = data?.source ?? "default"
@@ -330,11 +332,17 @@ export function MCPSection() {
                   {!isLoaded && (
                     <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
                       <p className="mb-1 font-medium">Failed to load server</p>
-                      <p className="text-xs opacity-90">
-                        Check that the server package is installed and
-                        environment variables are set correctly. See console
-                        for details.
-                      </p>
+                      {serverErrors[server.name] ? (
+                        <p className="text-xs opacity-90">
+                          {serverErrors[server.name]}
+                        </p>
+                      ) : (
+                        <p className="text-xs opacity-90">
+                          Check that the server package is installed and
+                          environment variables are set correctly. See console
+                          for details.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

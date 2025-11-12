@@ -10,5 +10,6 @@ export { loadMCPToolsFromURL } from "./load-mcp-from-url"
 export {
   loadMCPTools,
   getMCPTools,
+  getMCPToolsWithErrors,
   clearMCPToolsCache,
 } from "./manager"

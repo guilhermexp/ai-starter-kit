@@ -215,27 +215,32 @@ export function ByokSection() {
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-3 min-[400px]:grid-cols-3 min-[500px]:grid-cols-4">
-        {PROVIDERS.map((provider) => (
-          <button
-            key={provider.id}
-            type="button"
-            onClick={() => setSelectedProvider(provider.id)}
-            className={cn(
-              "relative flex aspect-square min-w-28 flex-col items-center justify-center gap-2 rounded-lg border p-4",
-              selectedProvider === provider.id
-                ? "border-primary ring-primary/30 ring-2"
-                : "border-border"
-            )}
-          >
-            {userKeyStatus[provider.id] && (
-              <span className="bg-secondary absolute top-1 right-1 rounded-sm border-[1px] p-1">
-                <KeyIcon className="text-secondary-foreground size-3.5" />
-              </span>
-            )}
-            <provider.icon className="size-4" />
-            <span>{provider.name}</span>
-          </button>
-        ))}
+        {PROVIDERS.map((provider) => {
+          const hasKey = userKeyStatus[provider.id as keyof typeof userKeyStatus]
+          return (
+            <button
+              key={provider.id}
+              type="button"
+              onClick={() => setSelectedProvider(provider.id)}
+              className={cn(
+                "relative flex aspect-square min-w-28 flex-col items-center justify-center gap-2 rounded-lg border p-4 transition-colors",
+                selectedProvider === provider.id
+                  ? "border-primary ring-primary/30 ring-2"
+                  : hasKey
+                    ? "border-border bg-green-500/5 dark:bg-green-500/10 border-green-500/20"
+                    : "border-border"
+              )}
+            >
+              {hasKey && (
+                <span className="bg-secondary absolute top-1 right-1 rounded-sm border-[1px] p-1">
+                  <KeyIcon className="text-secondary-foreground size-3.5" />
+                </span>
+              )}
+              <provider.icon className="size-4" />
+              <span>{provider.name}</span>
+            </button>
+          )
+        })}
         <button
           key="soon"
           type="button"
