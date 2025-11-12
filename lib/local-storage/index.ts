@@ -82,7 +82,6 @@ export function getUserId(): string | null {
 // User preferences
 export type UserPreferences = {
   layout: string
-  prompt_suggestions: boolean
   show_tool_invocations: boolean
   show_conversation_previews: boolean
   multi_model_enabled: boolean
@@ -92,7 +91,6 @@ export type UserPreferences = {
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   layout: "fullscreen",
-  prompt_suggestions: true,
   show_tool_invocations: true,
   show_conversation_previews: true,
   multi_model_enabled: false,

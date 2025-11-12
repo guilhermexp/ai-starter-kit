@@ -6,7 +6,6 @@ import { useUserPreferences } from "@/lib/user-preference-store/provider"
 export function InteractionPreferences() {
   const {
     preferences,
-    setPromptSuggestions,
     setShowToolInvocations,
     setShowConversationPreviews,
     setMultiModelEnabled,
@@ -14,21 +13,6 @@ export function InteractionPreferences() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Prompt Suggestions */}
-      <div>
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-medium">Prompt suggestions</h3>
-            <p className="text-muted-foreground text-xs">
-              Show suggested prompts when starting a new conversation
-            </p>
-          </div>
-          <Switch
-            checked={preferences.promptSuggestions}
-            onCheckedChange={setPromptSuggestions}
-          />
-        </div>
-      </div>
       {/* Tool Invocations */}
       <div>
         <div className="flex items-center justify-between">

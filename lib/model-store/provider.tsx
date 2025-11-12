@@ -13,9 +13,7 @@ import {
 type UserKeyStatus = {
   openrouter: boolean
   openai: boolean
-  mistral: boolean
   google: boolean
-  perplexity: boolean
   xai: boolean
   anthropic: boolean
   [key: string]: boolean // Allow for additional providers
@@ -40,9 +38,7 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
   const [userKeyStatus, setUserKeyStatus] = useState<UserKeyStatus>({
     openrouter: false,
     openai: false,
-    mistral: false,
     google: false,
-    perplexity: false,
     xai: false,
     anthropic: false,
   })
@@ -74,9 +70,7 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
       setUserKeyStatus({
         openrouter: false,
         openai: false,
-        mistral: false,
         google: false,
-        perplexity: false,
         xai: false,
         anthropic: false,
       })

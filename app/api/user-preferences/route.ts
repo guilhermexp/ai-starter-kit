@@ -22,7 +22,6 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const {
       layout,
-      prompt_suggestions,
       show_tool_invocations,
       show_conversation_previews,
       multi_model_enabled,
@@ -47,8 +46,6 @@ export async function PUT(request: NextRequest) {
     // Prepare update object with only provided fields
     const updateData: any = {}
     if (layout !== undefined) updateData.layout = layout
-    if (prompt_suggestions !== undefined)
-      updateData.prompt_suggestions = prompt_suggestions
     if (show_tool_invocations !== undefined)
       updateData.show_tool_invocations = show_tool_invocations
     if (show_conversation_previews !== undefined)

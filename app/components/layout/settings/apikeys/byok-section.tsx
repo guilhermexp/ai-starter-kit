@@ -2,10 +2,8 @@
 
 import ClaudeIcon from "@/components/icons/claude"
 import GoogleIcon from "@/components/icons/google"
-import MistralIcon from "@/components/icons/mistral"
 import OpenAIIcon from "@/components/icons/openai"
 import OpenRouterIcon from "@/components/icons/openrouter"
-import PerplexityIcon from "@/components/icons/perplexity"
 import XaiIcon from "@/components/icons/xai"
 import {
   AlertDialog,
@@ -56,28 +54,12 @@ const PROVIDERS: Provider[] = [
     defaultKey: "sk-............",
   },
   {
-    id: "mistral",
-    name: "Mistral",
-    icon: MistralIcon,
-    placeholder: "...",
-    getKeyUrl: "https://console.mistral.ai/api-keys/",
-    defaultKey: "............",
-  },
-  {
     id: "google",
     name: "Google",
     icon: GoogleIcon,
     placeholder: "AIza...",
     getKeyUrl: "https://ai.google.dev/gemini-api/docs/api-key",
     defaultKey: "AIza............",
-  },
-  {
-    id: "perplexity",
-    name: "Perplexity",
-    icon: PerplexityIcon,
-    placeholder: "pplx-...",
-    getKeyUrl: "https://docs.perplexity.ai/guides/getting-started",
-    defaultKey: "pplx-............",
   },
   {
     id: "xai",

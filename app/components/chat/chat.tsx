@@ -166,8 +166,7 @@ export function Chat() {
       files,
       onFileUpload: handleFileUpload,
       onFileRemove: handleFileRemove,
-      hasSuggestions:
-        preferences.promptSuggestions && !chatId && messages.length === 0,
+      hasSuggestions: false,
       onSelectModel: handleModelChange,
       selectedModel,
       isUserAuthenticated: isAuthenticated,
@@ -186,7 +185,6 @@ export function Chat() {
       files,
       handleFileUpload,
       handleFileRemove,
-      preferences.promptSuggestions,
       chatId,
       messages.length,
       handleModelChange,

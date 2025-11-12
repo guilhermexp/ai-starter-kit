@@ -15,9 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useUser } from "@/lib/user-store/provider"
-import { GithubLogoIcon } from "@phosphor-icons/react"
 import { useState } from "react"
-import { AppInfoTrigger } from "./app-info/app-info-trigger"
 import { FeedbackTrigger } from "./feedback/feedback-trigger"
 import { SettingsTrigger } from "./settings/settings-trigger"
 
@@ -62,28 +60,8 @@ export function UserMenu() {
           setMenuOpen(false)
         }}
       >
-        <DropdownMenuItem className="flex flex-col items-start gap-0 no-underline hover:bg-transparent focus:bg-transparent">
-          <span>{user?.display_name}</span>
-          <span className="text-muted-foreground max-w-full truncate">
-            {user?.email}
-          </span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <SettingsTrigger onOpenChange={handleSettingsOpenChange} />
         <FeedbackTrigger />
-        <AppInfoTrigger />
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2"
-          >
-            <GithubLogoIcon className="size-4" />
-            <span>GitHub</span>
-          </a>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -23,7 +23,6 @@ const LAYOUT_STORAGE_KEY = "preferred-layout"
 interface UserPreferencesContextType {
   preferences: UserPreferences
   setLayout: (layout: LayoutType) => void
-  setPromptSuggestions: (enabled: boolean) => void
   setShowToolInvocations: (enabled: boolean) => void
   setShowConversationPreviews: (enabled: boolean) => void
   setMultiModelEnabled: (enabled: boolean) => void
@@ -194,10 +193,6 @@ export function UserPreferencesProvider({
     }
   }
 
-  const setPromptSuggestions = (enabled: boolean) => {
-    updatePreferences({ promptSuggestions: enabled })
-  }
-
   const setShowToolInvocations = (enabled: boolean) => {
     updatePreferences({ showToolInvocations: enabled })
   }
@@ -229,7 +224,6 @@ export function UserPreferencesProvider({
       value={{
         preferences,
         setLayout,
-        setPromptSuggestions,
         setShowToolInvocations,
         setShowConversationPreviews,
         setMultiModelEnabled,
