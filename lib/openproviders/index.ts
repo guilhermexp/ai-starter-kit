@@ -1,6 +1,6 @@
 import { createGoogleGenerativeAI, google } from "@ai-sdk/google"
 import { createOpenAI, openai } from "@ai-sdk/openai"
-import type { LanguageModelV1 } from "@ai-sdk/provider"
+import type { LanguageModelV2 } from "@ai-sdk/provider"
 import { createXai, xai } from "@ai-sdk/xai"
 import { getProviderForModel } from "./provider-map"
 import type {
@@ -28,7 +28,7 @@ export function openproviders<T extends SupportedModel>(
   modelId: T,
   settings?: OpenProvidersOptions<T>,
   apiKey?: string
-): LanguageModelV1 {
+): LanguageModelV2 {
   const provider = getProviderForModel(modelId)
 
   if (provider === "openai") {

@@ -8,8 +8,9 @@ import { Loader } from "@/components/prompt-kit/loader"
 import { ScrollButton } from "@/components/prompt-kit/scroll-button"
 import { getModelInfo } from "@/lib/models"
 import { PROVIDERS } from "@/lib/providers"
+import { getMessageContent, getMessageFiles } from "@/lib/ui-message-utils"
 import { cn } from "@/lib/utils"
-import { Message as MessageType } from "@ai-sdk/react"
+import { UIMessage as MessageType } from "@ai-sdk/react"
 import { useEffect, useState } from "react"
 import { Message } from "../chat/message"
 
@@ -61,12 +62,8 @@ function ResponseCard({ response, group }: ResponseCardProps) {
           <Message
             id={response.message.id}
             variant="assistant"
-            parts={
-              response.message.parts || [
-                { type: "text", text: response.message.content },
-              ]
-            }
-            attachments={response.message.experimental_attachments}
+            parts={response.message.parts}
+            attachments={getMessageFiles(response.message)}
             onDelete={() => group.onDelete(response.model, response.message.id)}
             onEdit={(id, newText) => group.onEdit(response.model, id, newText)}
             onReload={() => group.onReload(response.model)}
@@ -75,7 +72,7 @@ function ResponseCard({ response, group }: ResponseCardProps) {
             hasScrollAnchor={false}
             className="bg-transparent p-0 px-0"
           >
-            {response.message.content}
+            {getMessageContent(response.message)}
           </Message>
         ) : response.isLoading ? (
           <div className="space-y-2">
@@ -136,18 +133,14 @@ export function MultiModelConversation({
                       <Message
                         id={group.userMessage.id}
                         variant="user"
-                        parts={
-                          group.userMessage.parts || [
-                            { type: "text", text: group.userMessage.content },
-                          ]
-                        }
-                        attachments={group.userMessage.experimental_attachments}
+                        parts={group.userMessage.parts}
+                        attachments={getMessageFiles(group.userMessage)}
                         onDelete={() => {}}
                         onEdit={() => {}}
                         onReload={() => {}}
                         status="ready"
                       >
-                        {group.userMessage.content}
+                        {getMessageContent(group.userMessage)}
                       </Message>
                     </div>
 

@@ -111,7 +111,7 @@ export const Suggestions = memo(function Suggestions({
         {activeCategoryData?.items.map((suggestion: string, index: number) => (
           <MotionPromptSuggestion
             key={`${activeCategoryData?.label}-${suggestion}-${index}`}
-            highlight={activeCategoryData.highlight}
+            highlight={activeCategoryData.highlight ? 'true' : undefined}
             type="button"
             onClick={() => handleSuggestionClick(suggestion)}
             className="block h-full text-left"

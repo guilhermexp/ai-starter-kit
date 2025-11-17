@@ -14,7 +14,8 @@ type ModelChat = {
   model: ModelConfig
   messages: any[]
   isLoading: boolean
-  append: (message: any, options?: any) => void
+  status: string
+  sendMessage: (message: any, options?: any) => void
   stop: () => void
 }
 
@@ -27,7 +28,6 @@ export function useMultiChat(models: ModelConfig[]): ModelChat[] {
     // todo: fix this
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useChat({
-      api: "/api/chat",
       onError: (error) => {
         const model = models[index]
         if (model) {
@@ -50,9 +50,10 @@ export function useMultiChat(models: ModelConfig[]): ModelChat[] {
       return {
         model,
         messages: chatHook.messages,
-        isLoading: chatHook.isLoading,
-        append: (message: any, options?: any) => {
-          return chatHook.append(message, options)
+        isLoading: chatHook.status === 'streaming' || chatHook.status === 'submitted',
+        status: chatHook.status,
+        sendMessage: (message: any, options?: any) => {
+          return chatHook.sendMessage(message, options)
         },
         stop: chatHook.stop,
       }
@@ -61,7 +62,7 @@ export function useMultiChat(models: ModelConfig[]): ModelChat[] {
     return instances
     // todo: fix this
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [models, ...chatHooks.flatMap((chat) => [chat.messages, chat.isLoading])])
+  }, [models, ...chatHooks.flatMap((chat) => [chat.messages, chat.status])])
 
   return activeChatInstances
 }

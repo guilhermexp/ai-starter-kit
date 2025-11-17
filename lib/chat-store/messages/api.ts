@@ -1,4 +1,4 @@
-import type { Message as MessageAISDK } from "ai"
+import type { CoreMessage as MessageAISDK } from "ai"
 import { readFromIndexedDB, writeToIndexedDB } from "../persist"
 
 export async function getMessagesFromDb(

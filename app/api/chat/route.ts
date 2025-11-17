@@ -4,7 +4,7 @@ import { getProviderForModel } from "@/lib/openproviders/provider-map"
 import { getAllTools } from "@/lib/tools"
 import type { ProviderWithoutOllama } from "@/lib/user-keys"
 import { Attachment } from "@ai-sdk/ui-utils"
-import { Message as MessageAISDK, streamText } from "ai"
+import { CoreMessage, streamText } from "ai"
 import {
   logUserMessage,
   storeAssistantMessage,
@@ -15,7 +15,7 @@ import { createErrorResponse, extractErrorMessage } from "./utils"
 export const maxDuration = 60
 
 type ChatRequest = {
-  messages: MessageAISDK[]
+  messages: CoreMessage[]
   chatId: string
   userId: string
   model: string
@@ -55,11 +55,19 @@ export async function POST(req: Request) {
     const userMessage = messages[messages.length - 1]
 
     if (userMessage?.role === "user") {
+      // Extract text content from CoreMessage (can be string or array of parts)
+      const content = typeof userMessage.content === "string"
+        ? userMessage.content
+        : userMessage.content
+            .filter((part) => part.type === "text")
+            .map((part) => part.text)
+            .join("")
+
       await logUserMessage({
         userId,
         chatId,
-        content: userMessage.content,
-        attachments: userMessage.experimental_attachments as Attachment[],
+        content,
+        attachments: [] as Attachment[], // CoreMessage doesn't have experimental_attachments
         model,
         isAuthenticated,
         message_group_id,
@@ -90,7 +98,7 @@ export async function POST(req: Request) {
       system: effectiveSystemPrompt,
       messages: messages,
       tools: allTools,
-      maxSteps: 10,
+      // maxSteps removed in AI SDK 5.0, use stopWhen for more control if needed
       onError: (err: unknown) => {
         console.error("Streaming error occurred:", err)
         // Don't set streamError anymore - let the AI SDK handle it through the stream
@@ -107,14 +115,9 @@ export async function POST(req: Request) {
       },
     })
 
-    return result.toDataStreamResponse({
-      sendReasoning: true,
-      sendSources: true,
-      getErrorMessage: (error: unknown) => {
-        console.error("Error forwarded to client:", error)
-        return extractErrorMessage(error)
-      },
-    })
+    // toDataStreamResponse renamed to toUIMessageStreamResponse in AI SDK 5.0
+    // sendReasoning, sendSources, getErrorMessage no longer supported - handled internally
+    return result.toUIMessageStreamResponse()
   } catch (err: unknown) {
     console.error("Error in /api/chat:", err)
     const error = err as {

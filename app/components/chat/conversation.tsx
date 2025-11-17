@@ -4,7 +4,8 @@ import {
 } from "@/components/prompt-kit/chat-container"
 import { Loader } from "@/components/prompt-kit/loader"
 import { ScrollButton } from "@/components/prompt-kit/scroll-button"
-import { Message as MessageType } from "@ai-sdk/react"
+import { getMessageContent, getMessageFiles } from "@/lib/ui-message-utils"
+import { UIMessage as MessageType } from "@ai-sdk/react"
 import { useRef } from "react"
 import { Message } from "./message"
 
@@ -55,7 +56,7 @@ export function Conversation({
                 key={message.id}
                 id={message.id}
                 variant={message.role}
-                attachments={message.experimental_attachments}
+                attachments={getMessageFiles(message)}
                 isLast={isLast}
                 onDelete={onDelete}
                 onEdit={onEdit}
@@ -65,7 +66,7 @@ export function Conversation({
                 status={status}
                 onQuote={onQuote}
               >
-                {message.content}
+                {getMessageContent(message)}
               </Message>
             )
           })}

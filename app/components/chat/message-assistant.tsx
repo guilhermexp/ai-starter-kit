@@ -4,9 +4,10 @@ import {
   MessageActions,
   MessageContent,
 } from "@/components/prompt-kit/message"
+import { isToolPart, type ToolUIPart } from "@/lib/ui-message-utils"
 import { useUserPreferences } from "@/lib/user-preference-store/provider"
 import { cn } from "@/lib/utils"
-import type { Message as MessageAISDK } from "@ai-sdk/react"
+import type { UIMessage as MessageAISDK } from "@ai-sdk/react"
 import { ArrowClockwise, Check, Copy } from "@phosphor-icons/react"
 import { useCallback, useRef } from "react"
 import { getSources } from "./get-sources"
@@ -45,30 +46,32 @@ export function MessageAssistant({
   onQuote,
 }: MessageAssistantProps) {
   const { preferences } = useUserPreferences()
-  const sources = getSources(parts)
-  const toolInvocationParts = parts?.filter(
-    (part) => part.type === "tool-invocation"
-  )
-  const reasoningParts = parts?.find((part) => part.type === "reasoning")
+  const sources = getSources(parts || [])
+  const toolInvocationParts = parts?.filter((part) => isToolPart(part)) as ToolUIPart[]
+  const reasoningParts = parts?.find((part) => part.type === "reasoning") as { type: "reasoning"; text: string } | undefined
   const contentNullOrEmpty = children === null || children === ""
   const isLastStreaming = status === "streaming" && isLast
   const searchImageResults =
     parts
-      ?.filter(
-        (part) =>
-          part.type === "tool-invocation" &&
-          part.toolInvocation?.state === "result" &&
-          part.toolInvocation?.toolName === "imageSearch" &&
-          part.toolInvocation?.result?.content?.[0]?.type === "images"
-      )
-      .flatMap((part) =>
-        part.type === "tool-invocation" &&
-        part.toolInvocation?.state === "result" &&
-        part.toolInvocation?.toolName === "imageSearch" &&
-        part.toolInvocation?.result?.content?.[0]?.type === "images"
-          ? (part.toolInvocation?.result?.content?.[0]?.results ?? [])
-          : []
-      ) ?? []
+      ?.filter((part) => {
+        if (!isToolPart(part)) return false
+        const toolPart = part as ToolUIPart
+        const toolType = toolPart.type.replace(/^tool-/, "")
+        return (
+          toolPart.state === "output-available" &&
+          (toolType === "imageSearch" || toolPart.toolName === "imageSearch") &&
+          toolPart.output &&
+          typeof toolPart.output === "object" &&
+          "content" in toolPart.output &&
+          Array.isArray((toolPart.output as { content: unknown[] }).content) &&
+          (toolPart.output as { content: { type: string }[] }).content[0]?.type === "images"
+        )
+      })
+      .flatMap((part) => {
+        const toolPart = part as ToolUIPart
+        const output = toolPart.output as { content: { type: string; results?: unknown[] }[] }
+        return output?.content?.[0]?.results ?? []
+      }) ?? []
 
   const isQuoteEnabled = !preferences.multiModelEnabled
   const messageRef = useRef<HTMLDivElement>(null)
@@ -99,9 +102,9 @@ export function MessageAssistant({
         )}
         {...(isQuoteEnabled && { "data-message-id": messageId })}
       >
-        {reasoningParts && reasoningParts.reasoning && (
+        {reasoningParts && reasoningParts.text && (
           <Reasoning
-            reasoning={reasoningParts.reasoning}
+            reasoning={reasoningParts.text}
             isStreaming={status === "streaming"}
           />
         )}
@@ -113,7 +116,7 @@ export function MessageAssistant({
           )}
 
         {searchImageResults.length > 0 && (
-          <SearchImages results={searchImageResults} />
+          <SearchImages results={searchImageResults as any[]} />
         )}
 
         {contentNullOrEmpty ? null : (

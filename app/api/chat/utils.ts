@@ -1,4 +1,4 @@
-import { Message as MessageAISDK } from "ai"
+import { CoreMessage as MessageAISDK } from "ai"
 
 /**
  * Clean messages when switching between agents with different tool capabilities.
@@ -25,9 +25,7 @@ export function cleanMessagesForTools(
       if (message.role === "assistant") {
         const cleanedMessage: MessageAISDK = { ...message }
 
-        if (message.toolInvocations && message.toolInvocations.length > 0) {
-          delete cleanedMessage.toolInvocations
-        }
+        // toolInvocations property removed in AI SDK 5.0 - tool info is now in content parts
 
         if (Array.isArray(message.content)) {
           const filteredContent = (
@@ -115,8 +113,8 @@ export function cleanMessagesForTools(
  * Check if a message contains tool-related content
  */
 export function messageHasToolContent(message: MessageAISDK): boolean {
+  // toolInvocations removed in AI SDK 5.0 - check content parts instead
   return !!(
-    message.toolInvocations?.length ||
     (message as { role: string }).role === "tool" ||
     (Array.isArray(message.content) &&
       (message.content as Array<{ type?: string }>).some(
@@ -126,7 +124,7 @@ export function messageHasToolContent(message: MessageAISDK): boolean {
           part.type &&
           (part.type === "tool-call" ||
             part.type === "tool-result" ||
-            part.type === "tool-invocation")
+            part.type.startsWith("tool-"))
       ))
   )
 }

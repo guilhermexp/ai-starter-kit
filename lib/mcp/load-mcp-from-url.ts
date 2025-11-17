@@ -1,4 +1,4 @@
-import { experimental_createMCPClient as createMCPClient } from "ai"
+import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp"
 
 export async function loadMCPToolsFromURL(url: string) {
   if (!url || typeof url !== "string") {

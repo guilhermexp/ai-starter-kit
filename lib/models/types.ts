@@ -1,4 +1,4 @@
-import { LanguageModelV1 } from "ai"
+import { LanguageModelV2 } from "@ai-sdk/provider"
 
 type ModelConfig = {
   id: string // "gpt-4.1-nano" // same from AI SDKs
@@ -33,11 +33,11 @@ type ModelConfig = {
 
   icon?: string // e.g. "gpt-4", "claude", "gemini", or custom string
 
-  // apiSdk?: () => LanguageModelV1 // "openai("gpt-4.1-nano")"
+  // apiSdk?: () => LanguageModelV2 // "openai("gpt-4.1-nano")"
   apiSdk?: (
     apiKey?: string,
     opts?: { enableSearch?: boolean }
-  ) => LanguageModelV1
+  ) => LanguageModelV2
 
   accessible?: boolean // true if the model is accessible to the user
 }

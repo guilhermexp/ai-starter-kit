@@ -8,6 +8,7 @@ import { useChats } from "@/lib/chat-store/chats/provider"
 import { useMessages } from "@/lib/chat-store/messages/provider"
 import { useChatSession } from "@/lib/chat-store/session/provider"
 import { SYSTEM_PROMPT_DEFAULT } from "@/lib/config"
+import { filterValidUIMessages } from "@/lib/ui-message-utils"
 import { useUserPreferences } from "@/lib/user-preference-store/provider"
 import { useUser } from "@/lib/user-store/provider"
 import { cn } from "@/lib/utils"
@@ -44,7 +45,8 @@ export function Chat() {
     [chatId, getChatById]
   )
 
-  const { messages: initialMessages, cacheAndAddMessage } = useMessages()
+  const { messages: rawMessages, cacheAndAddMessage } = useMessages()
+  const initialMessages = useMemo(() => filterValidUIMessages(rawMessages), [rawMessages])
   const { user } = useUser()
   const { preferences } = useUserPreferences()
   const { draftValue, setDraftValue, clearDraft } = useChatDraft(chatId)

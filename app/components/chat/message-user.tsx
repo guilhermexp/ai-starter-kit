@@ -16,7 +16,7 @@ import {
 } from "@/components/prompt-kit/message"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Message as MessageType } from "@ai-sdk/react"
+import { UIMessage as MessageType } from "@ai-sdk/react"
 import { Check, Copy, Trash } from "@phosphor-icons/react"
 import Image from "next/image"
 import { useRef, useState } from "react"
@@ -28,7 +28,7 @@ const getTextFromDataUrl = (dataUrl: string) => {
 
 export type MessageUserProps = {
   hasScrollAnchor?: boolean
-  attachments?: MessageType["experimental_attachments"]
+  attachments?: any[]
   children: string
   copied: boolean
   copyToClipboard: () => void
